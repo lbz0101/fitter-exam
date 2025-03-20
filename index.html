@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <title>钳工证理论历年真题（机械制图部分）</title>
     <style>
+	    /* 新增密码框样式 */
+    #password-input {
+        width: 80%;
+        padding: 12px;
+        font-size: 16px;
+        margin: 10px 0;
+        border: 2px solid #2196F3;
+        border-radius: 8px;
+    }
+
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -250,22 +260,25 @@
             background: #888;
             border-radius: 4px;
         }
-
         #ranking-list::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+
     </style>
 </head>
 <body>
-    <div id="homepage">
-        <h1>由高州一职 Mr黎 制作</h1>
-        <select id="student-select">
-            <option value="">请选择学生姓名</option>
-        </select>
-        <br>
-        <button id="enter-btn" onclick="enterSystem()">进入系统</button>
-        <button id="rank-btn" onclick="showRanking()">排行榜</button>
-    </div>
+<div id="homepage">
+    <h1>由高州一职 Mr黎 制作</h1>
+    <select id="student-select">
+        <option value="">请选择学生姓名</option>
+    </select>
+    <!-- 新增密码输入框 -->
+    <input type="password" id="password-input" placeholder="请输入系统密码">
+    <br>
+    <button id="enter-btn" onclick="enterSystem()">进入系统</button>
+    <button id="rank-btn" onclick="showRanking()">排行榜</button>
+</div>
 
     <div id="container">
         <div id="timer">07:00</div>
@@ -298,7 +311,7 @@
     </div>
 
 <script>
-    const answerKey = "ACBDBAADBCADBACCADCBBBCCADAAABBACDBDAB";
+    const answerKey = "ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA";
     const studentList = [
         "邱日强","黄火明","杨名驰","朱立乾","邱耀铭","葛金鹏","梁皓轩",
         "郭恩瑞","程剑豪","罗远昊","江柏冠","卢宝增","邓镇权","黄庆飞",
@@ -346,15 +359,23 @@
     // 进入系统
     function enterSystem() {
         currentStudent = document.getElementById('student-select').value;
+        const password = document.getElementById('password-input').value;
+        
         if (!currentStudent) {
             alert('请先选择学生姓名！');
             return;
         }
+        if (password !== "2426") {
+            alert('密码错误！');
+            return;
+        }
+        
         document.getElementById('homepage').style.display = 'none';
         document.getElementById('container').style.display = 'block';
         initializeTest();
         startTimer();
     }
+
 
     // 初始化测试
     function initializeTest() {
