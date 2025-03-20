@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>钳工证理论历年真题（机械制图部分）</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        #homepage {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+            margin: 50px auto;
+        }
+
+        #container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        #timer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: red;
+            font-weight: bold;
+            background-color: rgba(255,255,255,0.9);
+            padding: 5px 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        #question-image {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border: 3px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .option-btn {
+            padding: 15px;
+            font-size: 17px;
+            cursor: pointer;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            background-color: white;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            background-color: #4CAF50;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        #progress {
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        #feedback {
+            text-align: center;
+            font-size: 20px;
+            min-height: 30px;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #confirm-btn, #next-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #confirm-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 15px 60px;
+            min-width: 120px;
+        }
+
+        #next-btn {
+            background-color: #9C27B0;
+            color: white;
+            display: none;
+            padding: 15px 60px;
+            min-width: 120px;   
+        }
+
+        .option-btn.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .wrong-questions {
+            margin: 25px auto;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-radius: 10px;
+            max-width: 600px;
+        }
+
+        .wrong-item {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #fff8f6;
+            border-radius: 8px;
+        }
+
+        .wrong-img {
+            max-width: 80%;
+            margin: 15px auto;
+            border: 2px solid #ff5722;
+            border-radius: 8px;
+            display: block;
+        }
+
+        #student-select {
+            width: 80%;
+            padding: 12px;
+            font-size: 16px;
+            margin: 20px 0;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+        }
+
+        #enter-btn, #rank-btn {
+            padding: 12px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        #enter-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        #rank-btn {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        /* 排行榜弹窗样式 */
+        #ranking-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .ranking-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            margin: 30px auto;
+            position: relative;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .ranking-header {
+            font-weight: bold;
+            background-color: #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        #ranking-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 0 10px;
+            margin: 10px 0;
+        }
+
+        /* 自定义滚动条样式 */
+        #ranking-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #ranking-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #ranking-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #ranking-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="homepage">
+        <h1>由高州一职 Mr黎 制作</h1>
+        <select id="student-select">
+            <option value="">请选择学生姓名</option>
+        </select>
+        <br>
+        <button id="enter-btn" onclick="enterSystem()">进入系统</button>
+        <button id="rank-btn" onclick="showRanking()">排行榜</button>
+    </div>
+
+    <div id="container">
+        <div id="timer">07:00</div>
+        <div id="progress">第 1/16 题</div>
+        <img id="question-image" src="" alt="题目图片">
+        <div class="options">
+            <button class="option-btn" onclick="selectAnswer('A')">A</button>
+            <button class="option-btn" onclick="selectAnswer('B')">B</button>
+            <button class="option-btn" onclick="selectAnswer('C')">C</button>
+            <button class="option-btn" onclick="selectAnswer('D')">D</button>
+        </div>
+        <button id="confirm-btn" onclick="checkAnswer()" disabled>确定</button>
+        <button id="next-btn" onclick="nextQuestion()">下一题</button>
+        <div id="feedback"></div>
+    </div>
+
+    <!-- 排行榜弹窗 -->
+    <div id="ranking-modal">
+        <div class="ranking-content">
+            <span class="close-btn" onclick="closeRanking()">&times;</span>
+            <h2 style="text-align:center; color:#FF9800; margin:10px 0 20px;">学生排行榜（历史最高分）</h2>
+            <div class="ranking-item ranking-header">
+                <span>排名</span>
+                <span>姓名</span>
+                <span>分数</span>
+                <span>用时</span>
+            </div>
+            <div id="ranking-list"></div>
+        </div>
+    </div>
+
+<script>
+    const answerKey = "ACBDBAADBCADBACCADCBBBCCADAAABBACDBDAB";
+    const studentList = [
+        "邱日强","黄火明","杨名驰","朱立乾","邱耀铭","葛金鹏","梁皓轩",
+        "郭恩瑞","程剑豪","罗远昊","江柏冠","卢宝增","邓镇权","黄庆飞",
+        "谢泽高","冯麟斌","卢子豪","张超城","黄析俊","黄永霖","李鼎",
+        "邓鸿镇","黄培轩","彭家乐","黄新铧","谢国永","曾俊烽","杨永建",
+        "陈继贤","刘金灿","袁乐清","朱冠帆","张广隆","梁国亮","梁燕辰",
+        "陈江南","林浩宇","蔡伟杰","林松海","吕仁才","韦悦","石江涛",
+        "宁颢然","刘付煜毅","梁志鑫","赖兆霆","张梓钥","冯子强","陈家庆",
+        "陈锡基","苏子聪"
+    ];
+
+    let currentTest = 0;
+    let score = 0;
+    let selectedQuestions = [];
+    let selectedAnswer = null;
+    let wrongAnswers = [];
+    let timeLeft = 420; // 7分钟
+    let timerId = null;
+    let currentStudent = "";
+    let startTime = 0;
+
+    // 初始化首页
+    function initHomepage() {
+        const select = document.getElementById('student-select');
+        studentList.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student;
+            option.textContent = student;
+            select.appendChild(option);
+            
+            // 初始化本地存储
+            if(!localStorage.getItem(student)) {
+                localStorage.setItem(student, JSON.stringify({ 
+                    score: 0,       // 明确初始化数值类型
+                    time: Infinity  // 使用 Infinity 作为特殊标记
+                }));
+            }
+        });
+
+        // 绑定事件监听器
+        document.getElementById('enter-btn').addEventListener('click', enterSystem);
+        document.getElementById('rank-btn').addEventListener('click', showRanking);
+    }
+
+    // 进入系统
+    function enterSystem() {
+        currentStudent = document.getElementById('student-select').value;
+        if (!currentStudent) {
+            alert('请先选择学生姓名！');
+            return;
+        }
+        document.getElementById('homepage').style.display = 'none';
+        document.getElementById('container').style.display = 'block';
+        initializeTest();
+        startTimer();
+    }
+
+    // 初始化测试
+    function initializeTest() {
+        timeLeft = 420; // 7分钟
+        startTime = Date.now();
+        let allQuestions = Array.from({length: 66}, (_, i) => i + 1);
+        selectedQuestions = shuffleArray(allQuestions).slice(0, 16);
+        loadQuestion(0);
+    }
+
+    // 随机排序
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // 加载题目
+    function loadQuestion(index) {
+        const questionNumber = selectedQuestions[index];
+        document.getElementById('question-image').src = `images/${questionNumber}.jpg`;
+        document.getElementById('progress').textContent = `第 ${index + 1}/16 题`;
+    }
+
+    // 选择答案
+    function selectAnswer(answer) {
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        event.target.classList.add('selected');
+        selectedAnswer = answer;
+        document.getElementById('confirm-btn').disabled = false;
+    }
+
+    // 检查答案
+    function checkAnswer() {
+        const currentQuestionNumber = selectedQuestions[currentTest];
+        const correctAnswer = answerKey[currentQuestionNumber - 1];
+        const feedback = document.getElementById('feedback');
+
+        if (selectedAnswer !== correctAnswer) {
+            wrongAnswers.push({
+                question: currentQuestionNumber,
+                userAnswer: selectedAnswer,
+                correctAnswer: correctAnswer
+            });
+            feedback.innerHTML = `❌ 回答错误，正确答案是 <strong>${correctAnswer}</strong>`;
+            feedback.style.backgroundColor = "#ffebee";
+            feedback.style.color = "#c62828";
+        } else {
+            score += 6.25;
+            feedback.innerHTML = "✅ 回答正确！";
+            feedback.style.backgroundColor = "#e8f5e9";
+            feedback.style.color = "#2e7d32";
+        }
+
+        document.getElementById('confirm-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    // 下一题
+    function nextQuestion() {
+        currentTest++;
+        if (currentTest < 16) {
+            resetQuestionUI();
+            loadQuestion(currentTest);
+        } else {
+            showFinalResult();
+        }
+    }
+
+    // 重置题目界面
+    function resetQuestionUI() {
+        selectedAnswer = null;
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('feedback').style.backgroundColor = 'transparent';
+        document.getElementById('confirm-btn').style.display = 'block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('confirm-btn').disabled = true;
+    }
+
+    // 显示最终结果
+    function showFinalResult() {
+        clearInterval(timerId);
+        const timeUsed = Math.floor((Date.now() - startTime) / 1000);
+        const historyData = JSON.parse(localStorage.getItem(currentStudent)) || { 
+            score: 0, 
+            time: Infinity 
+        };
+
+        // 确保历史数据有效性
+        const historyScore = Number.isFinite(historyData.score) ? historyData.score : 0;
+        const historyTime = Number.isFinite(historyData.time) ? historyData.time : Infinity;
+
+        if (score > historyScore || (score === historyScore && timeUsed < historyTime)) {
+            localStorage.setItem(currentStudent, JSON.stringify({
+                score: score,
+                time: timeUsed
+            }));
+        }
+
+        let wrongList = '';
+        if (wrongAnswers.length > 0) {
+            wrongList = `
+                <div class="wrong-questions">
+                    <h3 style="color:#ff5722; margin-bottom:25px;">错题回顾（共 ${wrongAnswers.length} 题）</h3>
+                    ${wrongAnswers.map(item => `
+                        <div class="wrong-item">
+                            <img src="images/${item.question}.jpg" class="wrong-img" alt="错题图片">
+                            <div style="text-align:center; margin-top:15px;">
+                                <span style="color:red;">你的答案：${item.userAnswer}</span>
+                                <span style="color:#4CAF50; margin-left:20px;">正确答案：${item.correctAnswer}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        document.getElementById('container').innerHTML = `
+            <div style="text-align:center; margin-top:20px;">
+                <button class="option-btn" onclick="returnToHome()">返回首页</button>
+            </div>
+            <div style="text-align:center; font-size:20px;">
+                <p style="font-size:24px; color:#2196F3;">
+                    考生姓名：<strong>${currentStudent}</strong><br>
+                    本次得分：<strong>${score.toFixed(2)}</strong><br>
+                    本次用时：<strong>${Math.floor(timeUsed/60)}分${timeUsed%60}秒</strong><br>
+                    历史最高：<strong>${Math.max(score, historyScore).toFixed(2)}</strong>
+                </p>
+                ${wrongList}
+            </div>
+        `;
+    }
+
+    // 返回首页
+    function returnToHome() {
+        location.reload();
+    }
+
+    // 倒计时
+    function startTimer() {
+        timerId = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                showFinalResult();
+            }
+        }, 1000);
+    }
+
+    // 显示排行榜
+    function showRanking() {
+        if (typeof studentList === 'undefined') {
+            console.error('学生列表未定义');
+            return;
+        }
+
+        const ranking = [];
+        studentList.forEach(student => {
+            // 强化数据验证
+            const rawData = localStorage.getItem(student);
+            let data;
+            try {
+                data = rawData ? JSON.parse(rawData) : { score: 0, time: Infinity };
+            } catch (e) {
+                data = { score: 0, time: Infinity }; // 数据损坏时重置
+            }
+
+            // 确保数值有效性
+            const validScore = Number.isFinite(data.score) ? data.score : 0;
+            const validTime = Number.isFinite(data.time) ? data.time : Infinity;
+
+            ranking.push({
+                name: student,
+                score: validScore,
+                time: validTime
+            });
+        });
+
+        // 排序逻辑
+        ranking.sort((a, b) => {
+            if (b.score === a.score) {
+                return a.time - b.time;
+            }
+            return b.score - a.score;
+        });
+
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = '';
+        ranking.slice(0, 300).forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'ranking-item';
+            div.innerHTML = `
+                <span>${index + 1}</span>
+                <span>${item.name}</span>
+                <!-- 双重保护：空值合并 + 数值验证 -->
+                <span>${(item.score ?? 0).toFixed(2)}</span>
+                <span>${item.time !== Infinity ? 
+                    `${Math.floor(item.time/60)}分${item.time%60}秒` : '无记录'}</span>
+            `;
+            rankingList.appendChild(div);
+        });
+
+        document.getElementById('ranking-modal').style.display = 'block';
+    }
+
+    // 关闭排行榜
+    function closeRanking() {
+        document.getElementById('ranking-modal').style.display = 'none';
+    }
+
+    // 点击外部关闭排行榜
+    window.onclick = function(event) {
+        const modal = document.getElementById('ranking-modal');
+        if (event.target == modal) {
+            closeRanking();
+        }
+    }
+
+    // 页面加载时初始化
+    window.onload = initHomepage;
+</script>
+
+</body>
+</html>
