@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <title>钳工证理论历年真题（机械制图部分）</title>
     <style>
-	    /* 新增密码框样式 */
-    #password-input {
-        width: 80%;
-        padding: 12px;
-        font-size: 16px;
-        margin: 10px 0;
-        border: 2px solid #2196F3;
-        border-radius: 8px;
-    }
-
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -64,10 +54,16 @@
         }
 
         .options {
-            display: grid;
+            display: none; /* 初始隐藏 */
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin: 25px 0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .option-btn {
@@ -167,6 +163,15 @@
             border-radius: 8px;
         }
 
+        #password-input {
+            width: 80%;
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 2px solid #2196F3;
+            border-radius: 8px;
+        }
+
         #enter-btn, #rank-btn {
             padding: 12px 40px;
             font-size: 18px;
@@ -187,7 +192,13 @@
             color: white;
         }
 
-        /* 排行榜弹窗样式 */
+        #loading-status {
+            text-align: center;
+            font-size: 18px;
+            color: #2196F3;
+            margin: 20px 0;
+        }
+
         #ranking-modal {
             display: none;
             position: fixed;
@@ -246,7 +257,6 @@
             margin: 10px 0;
         }
 
-        /* 自定义滚动条样式 */
         #ranking-list::-webkit-scrollbar {
             width: 8px;
         }
@@ -260,30 +270,29 @@
             background: #888;
             border-radius: 4px;
         }
+
         #ranking-list::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
-
-
     </style>
 </head>
 <body>
-<div id="homepage">
-    <h1>由高州一职 Mr黎 制作</h1>
-    <select id="student-select">
-        <option value="">请选择学生姓名</option>
-    </select>
-    <!-- 新增密码输入框 -->
-    <input type="password" id="password-input" placeholder="请输入系统密码">
-    <br>
-    <button id="enter-btn" onclick="enterSystem()">进入系统</button>
-    <button id="rank-btn" onclick="showRanking()">排行榜</button>
-</div>
+    <div id="homepage">
+        <h1>由高州一职 Mr黎 制作</h1>
+        <select id="student-select">
+            <option value="">请选择学生姓名</option>
+        </select>
+        <input type="password" id="password-input" placeholder="请输入系统密码">
+        <br>
+        <button id="enter-btn">进入系统</button>
+        <button id="rank-btn">排行榜</button>
+    </div>
 
     <div id="container">
         <div id="timer">07:00</div>
         <div id="progress">第 1/16 题</div>
         <img id="question-image" src="" alt="题目图片">
+        <div id="loading-status">正在加载题目图片，请稍候...</div>
         <div class="options">
             <button class="option-btn" onclick="selectAnswer('A')">A</button>
             <button class="option-btn" onclick="selectAnswer('B')">B</button>
@@ -295,7 +304,6 @@
         <div id="feedback"></div>
     </div>
 
-    <!-- 排行榜弹窗 -->
     <div id="ranking-modal">
         <div class="ranking-content">
             <span class="close-btn" onclick="closeRanking()">&times;</span>
@@ -311,7 +319,7 @@
     </div>
 
 <script>
-    const answerKey = "ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA";
+    const answerKey = "ACBDBAADBCADBACCADCBBBCCADAAABBACDBDAB";
     const studentList = [
         "邱日强","黄火明","杨名驰","朱立乾","邱耀铭","葛金鹏","梁皓轩",
         "郭恩瑞","程剑豪","罗远昊","江柏冠","卢宝增","邓镇权","黄庆飞",
@@ -328,12 +336,11 @@
     let selectedQuestions = [];
     let selectedAnswer = null;
     let wrongAnswers = [];
-    let timeLeft = 420; // 7分钟
+    let timeLeft = 420;
     let timerId = null;
     let currentStudent = "";
     let startTime = 0;
 
-    // 初始化首页
     function initHomepage() {
         const select = document.getElementById('student-select');
         studentList.forEach(student => {
@@ -342,21 +349,18 @@
             option.textContent = student;
             select.appendChild(option);
             
-            // 初始化本地存储
             if(!localStorage.getItem(student)) {
                 localStorage.setItem(student, JSON.stringify({ 
-                    score: 0,       // 明确初始化数值类型
-                    time: Infinity  // 使用 Infinity 作为特殊标记
+                    score: 0,
+                    time: Infinity 
                 }));
             }
         });
 
-        // 绑定事件监听器
         document.getElementById('enter-btn').addEventListener('click', enterSystem);
         document.getElementById('rank-btn').addEventListener('click', showRanking);
     }
 
-    // 进入系统
     function enterSystem() {
         currentStudent = document.getElementById('student-select').value;
         const password = document.getElementById('password-input').value;
@@ -373,20 +377,54 @@
         document.getElementById('homepage').style.display = 'none';
         document.getElementById('container').style.display = 'block';
         initializeTest();
-        startTimer();
     }
 
-
-    // 初始化测试
     function initializeTest() {
-        timeLeft = 420; // 7分钟
+        timeLeft = 420;
         startTime = Date.now();
         let allQuestions = Array.from({length: 66}, (_, i) => i + 1);
         selectedQuestions = shuffleArray(allQuestions).slice(0, 16);
-        loadQuestion(0);
+        
+        preloadImages().then(() => {
+            document.getElementById('loading-status').style.display = 'none';
+            document.querySelector('.options').style.display = 'grid';
+            loadQuestion(0);
+            startTimer();
+        }).catch(error => {
+            alert('图片加载失败，请刷新重试');
+            console.error('图片加载错误:', error);
+        });
     }
 
-    // 随机排序
+    function preloadImages() {
+        return new Promise((resolve, reject) => {
+            let loadedCount = 0;
+            const total = selectedQuestions.length;
+            const loadPromises = [];
+
+            selectedQuestions.forEach(num => {
+                const img = new Image();
+                img.src = `images/${num}.jpg`;
+                
+                const promise = new Promise((imgResolve, imgReject) => {
+                    img.onload = () => {
+                        loadedCount++;
+                        document.getElementById('loading-status').innerHTML = 
+                            `正在加载图片 (${loadedCount}/${total})...`;
+                        imgResolve();
+                    };
+                    img.onerror = () => imgReject(`图片加载失败: ${num}`);
+                });
+
+                loadPromises.push(promise);
+            });
+
+            Promise.all(loadPromises)
+                .then(() => resolve())
+                .catch(err => reject(err));
+        });
+    }
+
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -395,14 +433,13 @@
         return array;
     }
 
-    // 加载题目
     function loadQuestion(index) {
+        currentTest = index;
         const questionNumber = selectedQuestions[index];
         document.getElementById('question-image').src = `images/${questionNumber}.jpg`;
         document.getElementById('progress').textContent = `第 ${index + 1}/16 题`;
     }
 
-    // 选择答案
     function selectAnswer(answer) {
         document.querySelectorAll('.option-btn').forEach(btn => {
             btn.classList.remove('selected');
@@ -412,7 +449,6 @@
         document.getElementById('confirm-btn').disabled = false;
     }
 
-    // 检查答案
     function checkAnswer() {
         const currentQuestionNumber = selectedQuestions[currentTest];
         const correctAnswer = answerKey[currentQuestionNumber - 1];
@@ -438,7 +474,6 @@
         document.getElementById('next-btn').style.display = 'block';
     }
 
-    // 下一题
     function nextQuestion() {
         currentTest++;
         if (currentTest < 16) {
@@ -449,7 +484,6 @@
         }
     }
 
-    // 重置题目界面
     function resetQuestionUI() {
         selectedAnswer = null;
         document.querySelectorAll('.option-btn').forEach(btn => {
@@ -462,7 +496,6 @@
         document.getElementById('confirm-btn').disabled = true;
     }
 
-    // 显示最终结果
     function showFinalResult() {
         clearInterval(timerId);
         const timeUsed = Math.floor((Date.now() - startTime) / 1000);
@@ -471,7 +504,6 @@
             time: Infinity 
         };
 
-        // 确保历史数据有效性
         const historyScore = Number.isFinite(historyData.score) ? historyData.score : 0;
         const historyTime = Number.isFinite(historyData.time) ? historyData.time : Infinity;
 
@@ -516,12 +548,10 @@
         `;
     }
 
-    // 返回首页
     function returnToHome() {
         location.reload();
     }
 
-    // 倒计时
     function startTimer() {
         timerId = setInterval(() => {
             timeLeft--;
@@ -537,25 +567,17 @@
         }, 1000);
     }
 
-    // 显示排行榜
     function showRanking() {
-        if (typeof studentList === 'undefined') {
-            console.error('学生列表未定义');
-            return;
-        }
-
         const ranking = [];
         studentList.forEach(student => {
-            // 强化数据验证
             const rawData = localStorage.getItem(student);
             let data;
             try {
                 data = rawData ? JSON.parse(rawData) : { score: 0, time: Infinity };
             } catch (e) {
-                data = { score: 0, time: Infinity }; // 数据损坏时重置
+                data = { score: 0, time: Infinity };
             }
 
-            // 确保数值有效性
             const validScore = Number.isFinite(data.score) ? data.score : 0;
             const validTime = Number.isFinite(data.time) ? data.time : Infinity;
 
@@ -566,7 +588,6 @@
             });
         });
 
-        // 排序逻辑
         ranking.sort((a, b) => {
             if (b.score === a.score) {
                 return a.time - b.time;
@@ -582,7 +603,6 @@
             div.innerHTML = `
                 <span>${index + 1}</span>
                 <span>${item.name}</span>
-                <!-- 双重保护：空值合并 + 数值验证 -->
                 <span>${(item.score ?? 0).toFixed(2)}</span>
                 <span>${item.time !== Infinity ? 
                     `${Math.floor(item.time/60)}分${item.time%60}秒` : '无记录'}</span>
@@ -593,12 +613,10 @@
         document.getElementById('ranking-modal').style.display = 'block';
     }
 
-    // 关闭排行榜
     function closeRanking() {
         document.getElementById('ranking-modal').style.display = 'none';
     }
 
-    // 点击外部关闭排行榜
     window.onclick = function(event) {
         const modal = document.getElementById('ranking-modal');
         if (event.target == modal) {
@@ -606,9 +624,7 @@
         }
     }
 
-    // 页面加载时初始化
     window.onload = initHomepage;
 </script>
-
 </body>
 </html>
